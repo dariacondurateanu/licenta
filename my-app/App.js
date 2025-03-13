@@ -7,6 +7,9 @@ import LocationsListScreen from "./LocationsListScreen";
 import LocationsDetailsScreen from "./LocationsDetailsScreen";
 import ReviewScreen from "./ReviewScreen";
 import MenuScreen from "./MenuScreen";
+import ExplorePage from "./ExplorePage";
+import FavouritesScreen from "./FavouritesScreen";
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -20,6 +23,8 @@ export default function App() {
         <Stack.Screen name="LocationDetails" component={LocationsDetailsScreen} />
         <Stack.Screen name="ReviewScreen" component={ReviewScreen} />
         <Stack.Screen name="MenuScreen" component={MenuScreen} />
+        <Stack.Screen name="ExplorePage" component={ExplorePage} />
+        <Stack.Screen name="FavouritesScreen" component={FavouritesScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

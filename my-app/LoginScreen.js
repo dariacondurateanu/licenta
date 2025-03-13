@@ -31,7 +31,7 @@ const LoginScreen = () => {
       }
   
       Alert.alert("Autentificare reușită!");
-      navigation.navigate("LocationsList");
+      navigation.navigate("ExplorePage");
   
     } catch (error) {
       Alert.alert("Eroare la autentificare", error.message);

@@ -8,7 +8,7 @@ const LocationsListScreen = () => {
   const [locations, setLocations] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const navigation = useNavigation();
-  const userId = auth.currentUser?.uid; // 🔹 Înlocuiește cu ID-ul real al utilizatorului
+  const userId = auth.currentUser?.uid; 
 
   useEffect(() => {
     const fetchLocations = async () => {

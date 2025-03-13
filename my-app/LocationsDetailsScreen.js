@@ -5,7 +5,7 @@ import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 import { db , auth} from "./firebaseConfig"; 
 import { Linking } from "react-native";
-
+import { recalculateRating } from "./reviewService";
 
 const LocationDetailsScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -70,6 +70,8 @@ const LocationDetailsScreen = ({ route }) => {
         console.error("❌ Eroare la modificarea favorite:", error);
       }
     };
+
+    
   const timeAgo = (timestamp) => {
     if (!timestamp) return "";
     const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
@@ -102,7 +104,7 @@ const LocationDetailsScreen = ({ route }) => {
     }
   };
 
-  const handleDeleteReview = async (review) => {
+  const handleDeleteReview = async (reviewToDelete) => {
     Alert.alert(
       "Confirmare",
       "Sigur vrei să ștergi această recenzie?",
@@ -110,27 +112,57 @@ const LocationDetailsScreen = ({ route }) => {
         { text: "Anulează", style: "cancel" },
         {
           text: "Șterge",
+          style: "destructive",
           onPress: async () => {
             try {
               const locationRef = doc(db, "locations", location.id);
+              const locationSnap = await getDoc(locationRef);
+  
+              if (!locationSnap.exists()) return;
+  
+              const currentReviews = locationSnap.data().reviews || [];
+  
+              // Eliminăm recenzia pe baza userId + timestamp
+              const updatedReviews = currentReviews.filter(
+                (r) =>
+                  r.userId !== reviewToDelete.userId ||
+                  r.timestamp.seconds !== reviewToDelete.timestamp.seconds
+              );
+  
               await updateDoc(locationRef, {
-                reviews: arrayRemove(review),
+                reviews: updatedReviews,
               });
-              Alert.alert("✅ Recenzie ștearsă!");
-              setLocationData((prevData) => ({
-                ...prevData,
-                reviews: prevData.reviews.filter((r) => r !== review),
+  
+              // Recalculăm ratingul
+              await recalculateRating(location.id, updatedReviews);
+  
+              // Update UI
+              setLocationData((prev) => ({
+                ...prev,
+                reviews: updatedReviews,
+                rating:
+                  updatedReviews.length > 0
+                    ? parseFloat(
+                        (
+                          updatedReviews.reduce((acc, r) => acc + r.rating, 0) /
+                          updatedReviews.length
+                        ).toFixed(1)
+                      )
+                    : 0,
               }));
+  
+              Alert.alert("✅ Recenzie ștearsă!");
             } catch (error) {
               console.error("❌ Eroare la ștergerea recenziei: ", error);
               Alert.alert("Eroare! Încearcă din nou.");
             }
           },
-          style: "destructive",
         },
       ]
     );
   };
+  
+  
 
   const [editingReview, setEditingReview] = useState(null);
 
@@ -141,51 +173,66 @@ const handleEditReview = (review) => {
   setModalVisible(true);
 };
 
-  const saveEditedReview = async () => {
-    const numericRating = parseInt(newRating);
-  
-    if (isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
-      Alert.alert("❗ Ratingul trebuie să fie un număr între 1 și 5!");
-      return;
-    }
-  
-    if (!newComment.trim()) {
-      Alert.alert("❗ Recenzia nu poate fi goală!");
-      return;
-    }
-  
-    try {
-      const locationRef = doc(db, "locations", location.id);
-      await updateDoc(locationRef, {
-        reviews: arrayRemove(editingReview),
-      });
-  
-      const updatedReview = {
-        ...editingReview,
-        rating: numericRating,
-        comment: newComment,
-        timestamp: editingReview.timestamp,
-      };
-  
-      await updateDoc(locationRef, {
-        reviews: arrayUnion(updatedReview),
-      });
-  
-      setLocationData((prevData) => ({
-        ...prevData,
-        reviews: prevData.reviews.map((r) =>
-          r === editingReview ? updatedReview : r
-        ),
-      }));
-  
-      Alert.alert("✅ Recenzie editată cu succes!");
-      setModalVisible(false);
-    } catch (error) {
-      console.error("❌ Eroare la editarea recenziei: ", error);
-      Alert.alert("Eroare! Încearcă din nou.");
-    }
-  };
-  
+const saveEditedReview = async () => {
+  const numericRating = parseInt(newRating);
+
+  if (isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+    Alert.alert("❗ Ratingul trebuie să fie un număr între 1 și 5!");
+    return;
+  }
+
+  if (!newComment.trim()) {
+    Alert.alert("❗ Recenzia nu poate fi goală!");
+    return;
+  }
+
+  try {
+    const locationRef = doc(db, "locations", location.id);
+    const snap = await getDoc(locationRef);
+    const data = snap.data();
+    const reviews = data.reviews || [];
+
+    const updatedReview = {
+      ...editingReview,
+      rating: numericRating,
+      comment: newComment,
+      timestamp: editingReview.timestamp,
+    };
+
+    // 🧹 Înlocuiește în array după userId și timestamp
+    const updatedReviews = reviews.map((r) =>
+      r.userId === editingReview.userId &&
+      r.timestamp?.seconds === editingReview.timestamp?.seconds
+        ? updatedReview
+        : r
+    );
+
+    // 📤 Update complet în Firestore
+    await updateDoc(locationRef, {
+      reviews: updatedReviews,
+    });
+
+    // 🔁 Recalculăm ratingul
+await recalculateRating(location.id, updatedReviews);
+
+    // 🔄 Obținem ratingul actualizat din Firestore
+    const updatedSnap = await getDoc(locationRef);
+    const updatedData = updatedSnap.data();
+
+    // 🟢 Update UI local complet
+    setLocationData({
+      ...updatedData
+    });
+
+    setModalVisible(false);
+    Alert.alert("✅ Recenzie editată cu succes!");
+  } catch (error) {
+    console.error("❌ Eroare la editarea recenziei: ", error);
+    Alert.alert("Eroare! Încearcă din nou.");
+  }
+};
+
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -232,7 +279,11 @@ const handleEditReview = (review) => {
           }}
         />
       </View>
-      <Text>⭐ {locationData.rating}</Text>
+      <Text>
+  {locationData.rating && locationData.rating > 0 
+    ? `⭐ ${locationData.rating}` 
+    : "⭐ Fără rating momentan"}
+</Text>
       <Text>{locationData.description}</Text>
       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
         <Text>📍 {locationData.address}, {locationData.town} </Text>
