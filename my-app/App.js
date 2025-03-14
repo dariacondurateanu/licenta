@@ -9,7 +9,8 @@ import ReviewScreen from "./ReviewScreen";
 import MenuScreen from "./MenuScreen";
 import ExplorePage from "./ExplorePage";
 import FavouritesScreen from "./FavouritesScreen";
-
+import SurpriseMeScreen from "./SurpriseMeScreen";
+import LuckyWheelScreen from "./LuckyWheelScreen";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -25,7 +26,8 @@ export default function App() {
         <Stack.Screen name="MenuScreen" component={MenuScreen} />
         <Stack.Screen name="ExplorePage" component={ExplorePage} />
         <Stack.Screen name="FavouritesScreen" component={FavouritesScreen} />
-
+        <Stack.Screen name="SurpriseMe" component={SurpriseMeScreen} options={{ title: "Surprinde-mă" }}/>
+        <Stack.Screen name="LuckyWheel" component={LuckyWheelScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

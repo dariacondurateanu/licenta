@@ -6,7 +6,7 @@ import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firest
 import { db , auth} from "./firebaseConfig"; 
 import { Linking } from "react-native";
 import { recalculateRating } from "./reviewService";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 const LocationDetailsScreen = ({ route }) => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -243,7 +243,8 @@ await recalculateRating(location.id, updatedReviews);
   }
 
   return (
-    <ScrollView style={{ padding: 20 }}>
+    <SafeAreaView style={{ flex: 1 }}>
+  <ScrollView style={{ padding: 20 }} contentContainerStyle={{ paddingBottom: 40 }}>
       {/* 🔹 Butonul de Favorite - Poziționat în dreapta sus */}
       {/* 🔹 Container pentru butonul de favorite */}
       <View style={{ position: "relative" }}>
@@ -379,6 +380,7 @@ await recalculateRating(location.id, updatedReviews);
         onPress={() => navigation.navigate("ReviewScreen", { locationId: location.id })} 
       />
     </ScrollView>
+  </SafeAreaView>
   );
 };
 
