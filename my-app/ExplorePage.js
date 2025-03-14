@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import MapView, { Marker } from "react-native-maps";
 
 const { width } = Dimensions.get("window");
 
@@ -187,7 +188,7 @@ const ExplorePage = () => {
       {!selectedType && suggestedNow.length > 0 && (
         <View style={{ marginBottom: 20 }}>
           <Text style={styles.sectionTitle}>🔥 Sugestii pentru tine</Text>
-          <View style={{ height: 10 }} />
+          <View style={{ height: 20}} />
           <FlatList
             data={suggestedNow}
             renderItem={renderSuggestedCard}
@@ -217,6 +218,38 @@ const ExplorePage = () => {
       renderItem={renderFilteredCard}
       ListEmptyComponent={<Text>Nu există locații disponibile.</Text>}
     />
+    
+  </View>
+)}
+<View style={{ height: 20 }} />
+
+{/* Harta – se afișează doar dacă nu e selectat un tip */} 
+{!selectedType && (
+  <View style={{ height: 300, marginBottom: 20, marginHorizontal: 20, borderRadius: 10, overflow: "hidden" }}>
+    <MapView
+      style={{ flex: 1 }}
+      initialRegion={{
+        latitude: 44.4268,
+        longitude: 26.1025,
+        latitudeDelta: 0.08,
+        longitudeDelta: 0.08,
+      }}
+    >
+      {locations.map((loc) =>
+        loc.latitude && loc.longitude && (
+          <Marker
+            key={loc.id}
+            coordinate={{
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+            }}
+            title={loc.name}
+            description={`⭐ ${loc.rating || "Fără rating"}`}
+            onPress={() => navigation.navigate("LocationDetails", { location: loc })}
+          />
+        )
+      )}
+    </MapView>
   </View>
 )}
 
