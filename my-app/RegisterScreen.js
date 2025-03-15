@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-na
 import { auth,db } from "./firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-
+import { sendEmailVerification } from "firebase/auth";
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,16 +21,31 @@ export default function RegisterScreen({ navigation }) {
   
       await updateProfile(user, { displayName: name });
   
-      // 🔹 Creează document în Firestore
       await setDoc(doc(db, "users", user.uid), {
         name: name,
         email: email,
-        favorites: [], // inițial fără favorite
+        favorites: [],
       });
   
-      Alert.alert("Succes", "Cont creat cu succes!", [
-        { text: "OK", onPress: () => navigation.navigate("Login") },
-      ]);
+      // ✅ Trimite email de confirmare
+
+      await sendEmailVerification(user);
+      await auth.signOut(); // ⬅️ ieșim din cont pentru a preveni blocaje
+
+      navigation.navigate("EmailVerificationScreen");
+
+  
+      Alert.alert(
+        "Verificare necesară",
+        "Ți-am trimis un email pentru confirmare. Te rugăm să-l verifici înainte de autentificare.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("EmailVerificationScreen", { user }), // trimitem user
+          },
+        ]
+      );
+      
     } catch (error) {
       Alert.alert("Eroare", error.message);
       console.error("Eroare la înregistrare:", error);
@@ -39,6 +54,8 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={{ padding: 20, justifyContent: "center", alignItems: "center", flex: 1, backgroundColor: "#f8f9fa" }}>
+      
+      
       <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>Înregistrare</Text>
 
       <TextInput
@@ -63,6 +80,9 @@ export default function RegisterScreen({ navigation }) {
         secureTextEntry
         style={{ borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 20, width: "100%", backgroundColor: "#fff" }}
       />
+        <TextInput
+          autoComplete="off"
+        textContentType="none"/>
 
       <Button title="Creează cont" onPress={handleRegister} color="#007bff" />
       

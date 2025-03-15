@@ -11,6 +11,8 @@ import ExplorePage from "./ExplorePage";
 import FavouritesScreen from "./FavouritesScreen";
 import SurpriseMeScreen from "./SurpriseMeScreen";
 import LuckyWheelScreen from "./LuckyWheelScreen";
+import AccountDetailsScreen from "./AccountDetailsScreen";
+import EmailVerificationScreen from "./EmailVerificationScreen";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -28,6 +30,9 @@ export default function App() {
         <Stack.Screen name="FavouritesScreen" component={FavouritesScreen} />
         <Stack.Screen name="SurpriseMe" component={SurpriseMeScreen} options={{ title: "Surprinde-mă" }}/>
         <Stack.Screen name="LuckyWheel" component={LuckyWheelScreen} />
+        <Stack.Screen name="AccountDetailsScreen" component={AccountDetailsScreen} options={{ title: "Contul meu" }} />
+        <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
