@@ -7,6 +7,8 @@ import { db , auth} from "./firebaseConfig";
 import { Linking } from "react-native";
 import { recalculateRating } from "./reviewService";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Animated } from "react-native";
+
 const LocationDetailsScreen = ({ route }) => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -17,8 +19,21 @@ const LocationDetailsScreen = ({ route }) => {
   const [newRating, setNewRating] = useState("");
   const [newComment, setNewComment] = useState(""); 
   const [isFavorite, setIsFavorite] = useState(false);
-
-
+  const scaleAnim = useState(new Animated.Value(1))[0];
+  const pulseHeart = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.4,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
   useEffect(() => {
     const fetchLocation = async () => {
       if (!location?.id) return;
@@ -58,14 +73,16 @@ const LocationDetailsScreen = ({ route }) => {
             favorites: arrayRemove(location.id),
           });
           setIsFavorite(false);
-          Alert.alert("❌ Eliminat din favorite!");
+        //Alert.alert("❌ Eliminat din favorite!");
         } else {
           await updateDoc(userRef, {
             favorites: arrayUnion(location.id),
           });
           setIsFavorite(true);
-          Alert.alert("⭐ Adăugat la favorite!");
+          pulseHeart(); // ❤️ pulsăm doar la adăugare
+          //Alert.alert("❤️ Adăugat la favorite!");
         }
+        
       } catch (error) {
         console.error("❌ Eroare la modificarea favorite:", error);
       }
@@ -261,7 +278,17 @@ await recalculateRating(location.id, updatedReviews);
             zIndex: 10, // 🔹 Asigură că este deasupra imaginii
           }}
         >
-          <Text style={{ fontSize: 24, color: "white" }}>{isFavorite ? "⭐" : "☆"}</Text>
+         <Animated.Text
+  style={{
+    fontSize: 28,
+    transform: [{ scale: scaleAnim }],
+    color: isFavorite ? "red" : "white",
+  }}
+>
+  {isFavorite ? "❤️" : "♡"}
+</Animated.Text>
+
+
         </TouchableOpacity>
 
         {/* 🔹 Imaginea locației */}
@@ -307,6 +334,20 @@ await recalculateRating(location.id, updatedReviews);
     <Text key={day}>{day}: {hours}</Text>
   ));
 })()}
+
+{/* 🎯 Activități disponibile */}
+{Array.isArray(locationData.activities) && locationData.activities.length > 0 && (
+  <View style={{ marginTop: 20 }}>
+    <Text style={{ fontWeight: "bold" }}>🎯 Activități disponibile:</Text>
+    <View style={{ marginTop: 5 }}>
+      {locationData.activities.map((act, index) => (
+        <Text key={index}>• {act}</Text>
+      ))}
+    </View>
+  </View>
+)}
+
+
       <Text style={{ fontWeight: "bold", marginTop: 10 }}>📢 Recenzii:</Text>
       {locationData.reviews?.length > 0 ? (
         locationData.reviews.map((review, index) => (
@@ -375,10 +416,44 @@ await recalculateRating(location.id, updatedReviews);
     </View>
   </View>
 </Modal>
-      <Button 
-        title="Adaugă Recenzie" 
-        onPress={() => navigation.navigate("ReviewScreen", { locationId: location.id })} 
-      />
+<View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+  {/* Buton Adaugă Recenzie */}
+  <TouchableOpacity
+    style={{
+      backgroundColor: "#007bff",
+      padding: 12,
+      borderRadius: 8,
+      flex: 1,
+      marginRight: 5,
+    }}
+    onPress={() => navigation.navigate("ReviewScreen", { locationId: location.id })}
+  >
+    <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
+      ✍️ Adauga Recenzie
+    </Text>
+  </TouchableOpacity>
+
+  {/* Buton Rezervă */}
+  <TouchableOpacity
+    disabled={!locationData?.permiteRezervare}
+    style={{
+      backgroundColor: locationData?.permiteRezervare ? "#28a745" : "#ccc",
+      padding: 12,
+      borderRadius: 8,
+      flex: 1,
+    }}
+    onPress={() => {
+      if (locationData?.permiteRezervare) {
+        navigation.navigate("BookingScreen", { locationId: location.id });
+      }
+    }}
+  >
+    <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
+      📅 Rezervă
+    </Text>
+  </TouchableOpacity>
+</View>
+
     </ScrollView>
   </SafeAreaView>
   );

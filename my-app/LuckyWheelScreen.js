@@ -148,7 +148,20 @@ const segments = Array.from({ length: numSegments }, (_, i) => {
       </View>
 
       {/* Confetti 🎉 */}
-      {showConfetti && <ConfettiCannon count={100} origin={{ x: 200, y: 0 }} ref={confettiRef} />}
+      {showConfetti && (
+  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <ConfettiCannon
+      count={100}
+      origin={{ x: 200, y: 0 }} // chiar sus
+      fadeOut={true}
+      autoStart={true}
+      fallSpeed={3000}
+      explosionSpeed={500}
+      ref={confettiRef}
+    />
+  </View>
+)}
+
 
       {/* Rezultat locație aleasă */}
       {selectedLocation && (

@@ -57,8 +57,8 @@ const FavoriteLocationsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
-        ⭐ Localuri Favorite
+      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20 }}>
+      ❤️  Localuri Favorite
       </Text>
       {favoriteLocations.length === 0 ? (
         <Text>Nu ai locații favorite.</Text>

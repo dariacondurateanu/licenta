@@ -117,11 +117,18 @@ const SurpriseMeScreen = () => {
         filtered = filtered.filter((loc) => loc.type === selectedCategory);
       }
 
-      if (selectedRating) {
-        filtered = filtered.filter(
-          (loc) => loc.rating >= parseFloat(selectedRating)
-        );
-      }
+      // În handleSearch:
+if (selectedRating) {
+  const selected = parseFloat(selectedRating);
+  filtered = filtered.filter((loc) => {
+    const rating = parseFloat(loc.rating);
+    if (selected === 5) {
+      return rating === 5; // exact 5
+    }
+    return rating >= selected;
+  });
+}
+
 
       if (selectedPrice) {
         filtered = filtered.filter(
@@ -182,7 +189,7 @@ const SurpriseMeScreen = () => {
       <Image source={{ uri: item.imageUrl }} style={styles.image} />
       <Text style={styles.name}>{item.name}</Text>
       <Text style={styles.rating}>
-        {item.rating ? `⭐ ${item.rating}` : "Fără rating momentan"}
+        {item.rating ? `⭐ ${item.rating}` : "⭐ Fără rating momentan"}
       </Text>
     </TouchableOpacity>
   );
@@ -210,18 +217,21 @@ const SurpriseMeScreen = () => {
           </TouchableOpacity>
         ))}
 
-        <Text style={styles.label}>Rating minim:</Text>
-        {["5", "4.5", "4", "3.5"].map((rate) => (
-          <TouchableOpacity
-            key={rate}
-            style={styles.checkboxContainer}
-            onPress={() => setSelectedRating(toggleSelect(selectedRating, rate))}
-          >
-            <Text style={styles.checkboxText}>
-              {selectedRating === rate ? "✅" : "⬜️"} peste {rate}⭐
-            </Text>
-          </TouchableOpacity>
-        ))}
+<Text style={styles.label}>Rating minim:</Text>
+{["5", "4.5", "4", "3.5"].map((rate) => (
+  <TouchableOpacity
+    key={rate}
+    style={styles.checkboxContainer}
+    onPress={() => setSelectedRating(toggleSelect(selectedRating, rate))}
+  >
+    <Text style={styles.checkboxText}>
+      {selectedRating === rate
+        ? `✅ ${rate === "5" ? "5⭐" : `peste ${rate}⭐`}`
+        : `⬜️ ${rate === "5" ? "5⭐" : `peste ${rate}⭐`}`}
+    </Text>
+  </TouchableOpacity>
+))}
+
 
         <Text style={styles.label}>Preț mediu:</Text>
         {["$", "$$", "$$$"].map((val) => (

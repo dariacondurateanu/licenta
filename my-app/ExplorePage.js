@@ -120,7 +120,7 @@ const ExplorePage = () => {
       <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardRating}>⭐ {item.rating || "Fără rating"}</Text>
+        <Text style={styles.cardRating}>⭐ {item.rating || "Fără rating momentan"}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -249,7 +249,7 @@ const ExplorePage = () => {
               longitude: loc.longitude,
             }}
             title={loc.name}
-            description={`⭐ ${loc.rating || "Fără rating"}`}
+            description={`⭐ ${loc.rating || "Fără rating momentan"}`}
             onPress={() => navigation.navigate("LocationDetails", { location: loc })}
           />
         )
