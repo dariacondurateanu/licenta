@@ -195,7 +195,7 @@ const BookingScreen = ({ route, navigation }) => {
       
 
       Alert.alert("✅ Rezervare efectuată!");
-      navigation.goBack();
+      navigation.navigate("MyReservationsScreen");
     } catch (error) {
       console.error("Eroare la rezervare:", error);
       Alert.alert("❌ A apărut o eroare.");
