@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { doc, collection, getDocs, addDoc, query, where } from "firebase/firestore";
+import { doc,getDoc, collection, getDocs, addDoc, query, where } from "firebase/firestore";
 import { db, auth } from "./firebaseConfig";
 import moment from "moment";
+
 
 const BookingScreen = ({ route, navigation }) => {
   const { locationId } = route.params;
@@ -42,7 +43,7 @@ const BookingScreen = ({ route, navigation }) => {
     console.log("🚀 fetchDisponibilitate() a început...");
   
     const selectedDate = moment(date).format("YYYY-MM-DD");
-    const oraSlots = generateTimeSlots("11:00", "23:00", 30); // sloturi din 5 în 5 min
+    const oraSlots = generateTimeSlots("11:00", "23:30", 10); 
     const results = [];
   
     console.log("📆 Data selectată:", selectedDate);
@@ -133,19 +134,28 @@ const BookingScreen = ({ route, navigation }) => {
       Alert.alert("❗ Completează toate câmpurile!");
       return;
     }
-
+  
     try {
       const selectedDate = moment(date).format("YYYY-MM-DD");
-
+  
+      // ⚠️ Ia numele localului din Firestore
+      const docRef = doc(db, "locations", locationId);
+      const docSnap = await getDoc(docRef);
+  
+      if (!docSnap.exists()) {
+        Alert.alert("Eroare", "Nu s-a găsit informația despre restaurant.");
+        return;
+      }
+  
+      const numeRestaurant = docSnap.data().nume || "Restaurant";
+  
       const meseSnap = await getDocs(
         query(
           collection(db, `locations/${locationId}/mese`),
           where("localizare", "==", zona)
         )
       );
-
-      
-      
+  
       const rezervariSnap = await getDocs(
         query(
           collection(db, `locations/${locationId}/rezervari`),
@@ -153,30 +163,26 @@ const BookingScreen = ({ route, navigation }) => {
           where("oraStart", "==", selectedHour)
         )
       );
-
+  
       const meseRezervate = rezervariSnap.docs.map(d => d.data().masaId);
-      // Filtrăm mesele care nu sunt rezervate
-const meseDisponibile = meseSnap.docs
-.filter(m => !meseRezervate.includes(m.id))
-.map(m => ({
-  id: m.id,
-  capacitate: m.data().capacitate
-}));
-
-// Alegem doar mesele care au capacitate suficientă
-const mesePotrivite = meseDisponibile.filter(m => m.capacitate >= parseInt(nrPersoane));
-
-// Sortăm crescător după capacitate (pentru a lua masa cea mai mică potrivită)
-mesePotrivite.sort((a, b) => a.capacitate - b.capacitate);
-
-if (mesePotrivite.length === 0) {
-Alert.alert("❌ Nu există mese disponibile pentru numărul selectat de persoane.");
-return;
-}
-
-const masaLibera = mesePotrivite[0];
-
-
+      const meseDisponibile = meseSnap.docs
+        .filter(m => !meseRezervate.includes(m.id))
+        .map(m => ({
+          id: m.id,
+          capacitate: m.data().capacitate
+        }));
+  
+      const mesePotrivite = meseDisponibile
+        .filter(m => m.capacitate >= parseInt(nrPersoane))
+        .sort((a, b) => a.capacitate - b.capacitate);
+  
+      if (mesePotrivite.length === 0) {
+        Alert.alert("❌ Nu există mese disponibile pentru numărul selectat de persoane.");
+        return;
+      }
+  
+      const masaLibera = mesePotrivite[0];
+  
       await addDoc(collection(db, `locations/${locationId}/rezervari`), {
         userId: auth.currentUser?.uid,
         masaId: masaLibera.id,
@@ -186,6 +192,7 @@ const masaLibera = mesePotrivite[0];
         nrPersoane: parseInt(nrPersoane),
         numeClient: name
       });
+      
 
       Alert.alert("✅ Rezervare efectuată!");
       navigation.goBack();
@@ -194,7 +201,7 @@ const masaLibera = mesePotrivite[0];
       Alert.alert("❌ A apărut o eroare.");
     }
   };
-
+  
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>

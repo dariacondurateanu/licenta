@@ -14,6 +14,7 @@ import LuckyWheelScreen from "./LuckyWheelScreen";
 import AccountDetailsScreen from "./AccountDetailsScreen";
 import EmailVerificationScreen from "./EmailVerificationScreen";
 import BookingScreen from "./BookingScreen";
+import MyReservationsScreen from "./MyReservationsScreen";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
         <Stack.Screen name="AccountDetailsScreen" component={AccountDetailsScreen} options={{ title: "Contul meu" }} />
         <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
         <Stack.Screen name="BookingScreen" component={BookingScreen} options={{ title: "" }}/>
+        <Stack.Screen name="MyReservationsScreen" component={MyReservationsScreen} options={{ title: "" }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -178,15 +178,30 @@ const ExplorePage = () => {
           keyExtractor={(item) => item}
           contentContainerStyle={{ paddingTop: 60 }}
         />
-       <View style={styles.accountSection}>
-  <TouchableOpacity onPress={() => {
-    toggleDrawer();
-    navigation.navigate("AccountDetailsScreen");
-  }}>
+<View style={styles.accountSection}>
+  <TouchableOpacity
+    onPress={() => {
+      toggleDrawer();
+      navigation.navigate("MyReservationsScreen");
+    }}
+    style={{ marginBottom: 20, alignItems: "center" }}
+  >
+    <Ionicons name="calendar-outline" size={36} color="#333" />
+    <Text style={{ fontSize: 16, marginTop: 5 }}>Rezervările mele</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    onPress={() => {
+      toggleDrawer();
+      navigation.navigate("AccountDetailsScreen");
+    }}
+    style={{ alignItems: "center" }}
+  >
     <Ionicons name="person-circle-outline" size={40} color="#333" />
     <Text style={{ fontSize: 16, marginTop: 5 }}>Detalii cont</Text>
   </TouchableOpacity>
 </View>
+
       </Animated.View>
 
       {/* Sugestii – doar dacă NU avem tip selectat */}
