@@ -19,11 +19,13 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "./firebaseConfig";
 import moment from "moment";
+import { useNavigation } from "@react-navigation/native";
 
 const MyReservationsScreen = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("curente");
+  const navigation = useNavigation();
 
   const fetchReservations = async () => {
     try {
@@ -35,8 +37,8 @@ const MyReservationsScreen = () => {
 
       const rezervariPromises = allLocations.map(async (locDoc) => {
         const locationId = locDoc.id;
-        const locationName = locDoc.data().name || locDoc.data().nume || "Local";
-
+        const locationData = locDoc.data();
+        const locationName = locationData.name || locationData.nume || "Local";
         const rezervariSnap = await getDocs(
           query(
             collection(db, `locations/${locationId}/rezervari`),
@@ -54,6 +56,8 @@ const MyReservationsScreen = () => {
 
             return {
               id: rez.id,
+              locationId,
+              address: locationData.address || "Adresă indisponibilă",
               numeRestaurant: locationName,
               localizare: masaData.localizare || "Necunoscut",
               data: data.data,
@@ -61,7 +65,6 @@ const MyReservationsScreen = () => {
               oraEnd: data.oraEnd,
               ora: `${data.oraStart} - ${data.oraEnd}`,
               nrPersoane: data.nrPersoane,
-              numeClient: data.numeClient,
             };
           })
         );
@@ -77,6 +80,7 @@ const MyReservationsScreen = () => {
       setLoading(false);
     }
   };
+
   const handleCancelReservation = async (reservationId, restaurantName) => {
     try {
       const confirm = await new Promise((resolve) => {
@@ -89,20 +93,18 @@ const MyReservationsScreen = () => {
           ]
         );
       });
-  
+
       if (!confirm) return;
-  
-      // Găsim locația care conține rezervarea
+
       const locatiiSnap = await getDocs(collection(db, "locations"));
-  
+
       for (const locDoc of locatiiSnap.docs) {
         const rezervareRef = doc(db, `locations/${locDoc.id}/rezervari`, reservationId);
         const rezervareSnap = await getDoc(rezervareRef);
-  
-        if (rezervareSnap.exists()) {
-            await deleteDoc(rezervareRef);
 
-          fetchReservations(); // reîncarcă lista
+        if (rezervareSnap.exists()) {
+          await deleteDoc(rezervareRef);
+          fetchReservations(); // reload
           break;
         }
       }
@@ -111,7 +113,7 @@ const MyReservationsScreen = () => {
       Alert.alert("Eroare", "Nu s-a putut anula rezervarea.");
     }
   };
-  
+
   useEffect(() => {
     fetchReservations();
   }, []);
@@ -127,36 +129,71 @@ const MyReservationsScreen = () => {
   const renderItem = ({ item }) => {
     const isRezPast = isPast(item);
     const borderColor = isRezPast ? "#ccc" : "#4caf50";
-  
-    return (
-      <View style={[styles.cardWithBorder, { borderLeftColor: borderColor }]}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{item.numeRestaurant}</Text>
-          <Text>👤 {item.numeClient}</Text>
-          <Text>📍 Zonă: {item.localizare}</Text>
-          <Text>👥 Persoane: {item.nrPersoane}</Text>
-          <Text>📅 Data: {moment(item.data).format("DD MMMM YYYY")}</Text>
-          <Text>🕒 Ora: {item.ora}</Text>
-  
-          {!isRezPast && (
-  <View style={styles.cancelWrapper}>
-    <TouchableOpacity
-      style={styles.cancelCircle}
-      onPress={() => handleCancelReservation(item.id, item.numeRestaurant)}
-      activeOpacity={0.8}
-    >
-      <Text style={styles.cancelIcon}>🗑</Text>
-    </TouchableOpacity>
-    <Text style={styles.cancelLabel}>Anulează</Text>
-  </View>
-)}
 
+    return (
+      <TouchableOpacity
+      onPress={() => {
+        if (!item.locationId) {
+          Alert.alert("Eroare", "ID-ul locației este lipsă.");
+          return;
+        }
+      
+        navigation.navigate("LocationDetails", {
+          location: {
+            id: item.locationId,
+            // poți trimite și `name` sau altele dacă vrei, dar `id` e obligatoriu
+          },
+        });
+      }}
+      
+      
+        activeOpacity={0.9}
+      >
+        <View style={[styles.cardWithBorder, { borderLeftColor: borderColor }]}>
+          <View style={styles.card}>
+            <Text style={styles.title}>{item.numeRestaurant}</Text>
+            <Text style={styles.subTitle}>📍 {item.address}</Text>
+            <Text style={{ marginBottom: 4 }}>🧭 Zonă: {item.localizare}</Text>
+            <Text style={{ marginBottom: 4 }}>👥 Persoane: {item.nrPersoane}</Text>
+            <Text style={{ marginBottom: 4 }}>📅 Data: {moment(item.data).format("DD MMMM YYYY")}</Text>
+            <Text style={{ marginBottom: 4 }}>🕒 Ora: {item.ora}</Text>
+
+            {!isRezPast && (
+              <View style={styles.cancelWrapper}>
+                <TouchableOpacity
+                  style={styles.cancelCircle}
+                  onPress={() => handleCancelReservation(item.id, item.numeRestaurant)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cancelIcon}>🗑</Text>
+                </TouchableOpacity>
+                <Text style={styles.cancelLabel}>Anulează</Text>
+              </View>
+            )}
+
+            {isRezPast && (
+              <View style={styles.cancelWrapper}>
+                <TouchableOpacity
+                  style={[styles.cancelCircle, { backgroundColor: "#007bff" }]}
+                  onPress={() =>
+                    navigation.navigate("ReviewScreen", {
+                      locationId: item.locationId,
+                    })
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cancelIcon}>✍️</Text>
+                </TouchableOpacity>
+                <Text style={[styles.cancelLabel, { color: "#007bff" }]}>
+                  Recenzie
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
-  
-  
 
   return (
     <View style={{ flex: 1, padding: 20, backgroundColor: "#f5f5f5" }}>
@@ -313,7 +350,11 @@ const styles = StyleSheet.create({
     color: "#e63946",
     fontWeight: "500",
   },
-  
+  subTitle: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 5,
+  },
 });
 
 export default MyReservationsScreen;

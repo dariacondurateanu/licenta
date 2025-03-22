@@ -9,10 +9,10 @@ import { recalculateRating } from "./reviewService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Animated } from "react-native";
 
-const LocationDetailsScreen = ({ route }) => {
+const LocationsDetailsScreen = ({ route }) => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
-  const { location } = route.params || {};
+  const location = route.params?.location;
   const [locationData, setLocationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,21 +36,25 @@ const LocationDetailsScreen = ({ route }) => {
   };
   useEffect(() => {
     const fetchLocation = async () => {
-      if (!location?.id) return;
+      if (!route?.params?.location?.id) {
+        console.warn("Lipsă parametru location!");
+        return;
+      }
+  
       setLoading(true);
-
-      const locationRef = doc(db, "locations", location.id);
+      const locationRef = doc(db, "locations", route.params.location.id);
       const docSnap = await getDoc(locationRef);
-
+  
       if (docSnap.exists()) {
         setLocationData(docSnap.data());
       }
       checkIfFavorite();
       setLoading(false);
     };
-
+  
     fetchLocation();
   }, [isFocused]);
+  
 
     // ✅ Verifică dacă locația este deja la favorite
     const checkIfFavorite = async () => {
@@ -292,7 +296,22 @@ await recalculateRating(location.id, updatedReviews);
         </TouchableOpacity>
 
         {/* 🔹 Imaginea locației */}
-        <Image source={{ uri: locationData?.imageUrl }} style={{ width: "100%", height: 200, borderRadius: 10 }} />
+        <ScrollView 
+  horizontal 
+  pagingEnabled 
+  showsHorizontalScrollIndicator={false}
+  style={{ width: "100%", height: 200, borderRadius: 10 }}
+>
+  {locationData?.imageUrls?.map((imgUrl, index) => (
+    <Image 
+      key={index} 
+      source={{ uri: imgUrl }} 
+      style={{ width: 350, height: 200, borderRadius: 10, marginRight: 10 }} 
+      resizeMode="cover"
+    />
+  ))}
+</ScrollView>
+
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         <Text style={{ fontSize: 24, fontWeight: "bold", flex: 1 }}>{locationData.name}</Text>
@@ -327,7 +346,7 @@ await recalculateRating(location.id, updatedReviews);
   const weekDaysOrder = ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"];
   const sortedOpeningHours = weekDaysOrder.map(day => ({
     day,
-    hours: location.openingHours[day] || "Inchis"
+    hours: locationData?.openingHours[day] || "Inchis"
   }));
 
   return sortedOpeningHours.map(({ day, hours }) => (
@@ -459,4 +478,4 @@ await recalculateRating(location.id, updatedReviews);
   );
 };
 
-export default LocationDetailsScreen;
+export default LocationsDetailsScreen;
