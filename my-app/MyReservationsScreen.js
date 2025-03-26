@@ -141,7 +141,6 @@ const MyReservationsScreen = () => {
         navigation.navigate("LocationDetails", {
           location: {
             id: item.locationId,
-            // poți trimite și `name` sau altele dacă vrei, dar `id` e obligatoriu
           },
         });
       }}
@@ -352,6 +351,7 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 14,
+    fontWeight: "bold",
     color: "#555",
     marginBottom: 5,
   },

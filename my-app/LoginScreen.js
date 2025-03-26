@@ -14,6 +14,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "./firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -51,7 +52,20 @@ const LoginScreen = () => {
       Alert.alert("Eroare la autentificare", error.message);
     }
   };
-
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert("Atenție", "Introdu adresa ta de email mai întâi.");
+      return;
+    }
+  
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert("Succes", "Ți-am trimis un email pentru resetarea parolei.");
+    } catch (error) {
+      Alert.alert("Eroare", "Nu am putut trimite emailul de resetare.");
+    }
+  };
+  
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "#f8f9fa" }}
@@ -98,6 +112,9 @@ const LoginScreen = () => {
             backgroundColor: "#fff",
           }}
         />
+<TouchableOpacity onPress={handleForgotPassword} style={{ marginBottom: 15 }}>
+  <Text style={{ color: "#007bff" }}>🔐 Ai uitat parola?</Text>
+</TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => setKeepLoggedIn(!keepLoggedIn)}
