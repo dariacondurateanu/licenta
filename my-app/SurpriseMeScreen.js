@@ -247,7 +247,7 @@ if (selectedRating) {
         ))}
 
         <Text style={styles.label}>Activități speciale:</Text>
-        {["terasa", "karaoke", "board games", "laptop friendly"].map((act) => (
+        {["terasa", "karaoke", "board games", "laptop friendly","pet friendly"].map((act) => (
           <TouchableOpacity
             key={act}
             style={styles.checkboxContainer}

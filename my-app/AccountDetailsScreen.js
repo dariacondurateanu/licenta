@@ -13,7 +13,6 @@ import Modal from "react-native-modal";
 
 import { auth, db } from "./firebaseConfig";
 import {
-  sendPasswordResetEmail,
   updateProfile,
   signOut,
 } from "firebase/auth";
@@ -26,7 +25,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
-// Lista de avataruri disponibile (poți adăuga linkuri proprii mai târziu)
+
 const avatarOptions = [ 
   require("./avatars/avatar1.png"),
   require("./avatars/avatar2.png"),

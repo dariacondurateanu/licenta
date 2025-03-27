@@ -20,6 +20,9 @@ const LocationsDetailsScreen = ({ route }) => {
   const [newComment, setNewComment] = useState(""); 
   const [isFavorite, setIsFavorite] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
+  const [showReviews, setShowReviews] = useState(false);
+  const [reviewsModalVisible, setReviewsModalVisible] = useState(false);
+
   const pulseHeart = () => {
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -326,21 +329,27 @@ await recalculateRating(location.id, updatedReviews);
           }}
         />
       </View>
-      <Text>
-  {locationData.rating && locationData.rating > 0 
-    ? `⭐ ${locationData.rating}` 
-    : "⭐ Fără rating momentan"}
-</Text>
+      <TouchableOpacity
+  onPress={() => setReviewsModalVisible(true)}
+  style={{ marginTop: 8, marginBottom: 4, alignSelf: "flex-start" }}
+>
+  <Text style={{ fontSize: 16, fontWeight: "bold", color: "black" }}>
+    {locationData.rating && locationData.rating > 0
+      ? `⭐ ${locationData.rating}`
+      : "⭐ Fără rating momentan"} - Vezi recenzii
+  </Text>
+</TouchableOpacity>
+
+
       <Text>{locationData.description}</Text>
-      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-        <Text>📍 {locationData.address}, {locationData.town} </Text>
-        <TouchableOpacity 
-          onPress={openInMaps} 
-          style={{ backgroundColor: "#007bff", padding: 5, borderRadius: 5, marginLeft: 8 }}
-        >
-          <Text style={{ color: "white", fontSize: 14 }}> 🗺️ Harta</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity onPress={openInMaps} style={{ marginTop: 5 }}>
+  <Text style={{ fontSize: 16 }}>
+    📍 <Text style={{ color: "#007bff", textDecorationLine: "underline" }}>
+      {locationData.address}, {locationData.town}
+    </Text>
+  </Text>
+</TouchableOpacity>
+
       <Text style={{ fontWeight: "bold", marginTop: 10 }}>⏰ Program:</Text>
 {(() => {
   const weekDaysOrder = ["Luni", "Marti", "Miercuri", "Joi", "Vineri", "Sambata", "Duminica"];
@@ -367,40 +376,6 @@ await recalculateRating(location.id, updatedReviews);
 )}
 
 
-      <Text style={{ fontWeight: "bold", marginTop: 10 }}>📢 Recenzii:</Text>
-      {locationData.reviews?.length > 0 ? (
-        locationData.reviews.map((review, index) => (
-          <TouchableOpacity
-  key={index}
-  style={{ marginBottom: 10, padding: 10, backgroundColor: "#f0f0f0", borderRadius: 5 }}
-  onLongPress={() => {
-    if (review.userId === auth.currentUser?.uid) {
-      Alert.alert(
-        "Opțiuni recenzie",
-        "Ce vrei să faci?",
-        [
-          { text: "Anulează", style: "cancel" },
-          { text: "Editează", onPress: () => handleEditReview(review) },
-          { text: "Șterge", onPress: () => handleDeleteReview(review), style: "destructive" },
-        ]
-      );
-    } else {
-      Alert.alert("⛔ Nu poți modifica această recenzie", "Doar autorul recenziei o poate edita sau șterge.");
-    }
-  }}
->
-            <Text>👤 {review.user} - {review.rating} ⭐</Text>
-            <Text>{review.comment}</Text>
-            {review.timestamp && (
-              <Text style={{ fontSize: 12, color: "gray" }}>
-                ⏳ {timeAgo(review.timestamp.seconds)}
-              </Text>
-            )}
-          </TouchableOpacity>
-        ))
-      ) : (
-        <Text>Fără recenzii momentan.</Text>
-      )}
     <Modal visible={modalVisible} transparent animationType="slide">
   <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
     <View style={{ backgroundColor: "white", padding: 25, borderRadius: 10, width: 350 }}>
@@ -474,6 +449,76 @@ await recalculateRating(location.id, updatedReviews);
 </View>
 
     </ScrollView>
+    <Modal visible={reviewsModalVisible} animationType="slide" transparent={false}>
+  <SafeAreaView style={{ flex: 1 }}>
+    <ScrollView style={{ padding: 20 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20 }}>
+        📢 Recenzii pentru {locationData.name}
+      </Text>
+
+      {locationData.reviews?.length > 0 ? (
+        locationData.reviews.map((review, index) => (
+          <TouchableOpacity
+            key={index}
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: 12,
+              padding: 15,
+              marginBottom: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onLongPress={() => {
+              if (review.userId === auth.currentUser?.uid) {
+                Alert.alert(
+                  "Opțiuni recenzie",
+                  "Ce vrei să faci?",
+                  [
+                    { text: "Anulează", style: "cancel" },
+                    { text: "Editează", onPress: () => handleEditReview(review) },
+                    { text: "Șterge", onPress: () => handleDeleteReview(review), style: "destructive" },
+                  ]
+                );
+              } else {
+                Alert.alert("⛔ Nu poți modifica această recenzie", "Doar autorul recenziei o poate edita sau șterge.");
+              }
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+              <Text style={{ fontWeight: "bold", fontSize: 16 }}>👤 {review.user}</Text>
+              <Text style={{ fontSize: 15, color: "#f5c518" }}>{review.rating} ⭐</Text>
+            </View>
+            <Text style={{ fontSize: 15, marginBottom: 6 }}>{review.comment}</Text>
+            {review.timestamp && (
+              <Text style={{ fontSize: 12, color: "gray", textAlign: "right" }}>
+                ⏳ {timeAgo(review.timestamp.seconds)}
+              </Text>
+            )}
+          </TouchableOpacity>
+        ))
+      ) : (
+        <Text>Fără recenzii momentan.</Text>
+      )}
+
+      <TouchableOpacity
+        onPress={() => setReviewsModalVisible(false)}
+        style={{
+          marginTop: 30,
+          backgroundColor: "#dc3545",
+          padding: 12,
+          borderRadius: 8,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>✖ Închide</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  </SafeAreaView>
+</Modal>
+
   </SafeAreaView>
   );
 };
