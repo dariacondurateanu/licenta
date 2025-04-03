@@ -9,11 +9,13 @@ import {
   FlatList,
   StyleSheet,
   Image,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Callout } from "react-native-maps";
+
 
 const { width } = Dimensions.get("window");
 
@@ -24,9 +26,11 @@ const ExplorePage = () => {
   const [locations, setLocations] = useState([]);
   const [suggestedNow, setSuggestedNow] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
+  // Toggle drawer
   const toggleDrawer = () => {
     const toValue = drawerOpen ? -width * 0.5 : 0;
     Animated.timing(drawerAnim, {
@@ -37,13 +41,17 @@ const ExplorePage = () => {
     setDrawerOpen(!drawerOpen);
   };
 
+  // Fetch data
   const fetchData = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "locations"));
-      const allLocations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const allLocations = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
       const uniqueTypes = new Set();
-      allLocations.forEach(loc => {
+      allLocations.forEach((loc) => {
         if (loc.type) uniqueTypes.add(loc.type);
       });
 
@@ -55,7 +63,7 @@ const ExplorePage = () => {
       const today = dayMap[now.getDay()];
       const currentTime = now.getHours() + now.getMinutes() / 60;
 
-      const openNow = allLocations.filter(loc => {
+      const openNow = allLocations.filter((loc) => {
         const todayHours = loc.openingHours?.[today];
         if (!todayHours || todayHours === "Inchis") return false;
 
@@ -97,11 +105,16 @@ const ExplorePage = () => {
   const handleCategoryPress = (type) => {
     setSelectedType(type);
     toggleDrawer();
+    setSearchQuery("");
   };
 
   const filteredLocations = selectedType
-    ? locations.filter(loc => loc.type === selectedType)
-    : [];
+  ? locations.filter(
+      (loc) =>
+        loc.type &&
+        loc.type.trim().toLowerCase() === selectedType.trim().toLowerCase()
+    )
+  : [];
 
   const renderCategory = ({ item }) => (
     <TouchableOpacity
@@ -125,18 +138,27 @@ const ExplorePage = () => {
     </TouchableOpacity>
   );
 
-  const renderFilteredCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.filteredCard}
-      onPress={() => navigation.navigate("LocationDetails", { location: item })}
-    >
-      <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: 150 }} />
-      <View style={{ padding: 10 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.name}</Text>
-        <Text>⭐ {item.rating || "Fără rating momentan"}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderFilteredCard = ({ item }) => {
+    if (!item || !item.name) return null;
+    return (
+      <TouchableOpacity
+        style={styles.filteredCard}
+        onPress={() => navigation.navigate("LocationDetails", { location: item })}
+      >
+        {item.imageUrl ? (
+          <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: 150 }} />
+        ) : (
+          <View style={{ width: "100%", height: 150, backgroundColor: "#eee", justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ color: "#888" }}>Fără imagine</Text>
+          </View>
+        )}
+        <View style={{ padding: 10 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.name}</Text>
+          <Text>⭐ {item.rating || "Fără rating momentan"}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
@@ -162,12 +184,8 @@ const ExplorePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Overlay drawer */}
-      {drawerOpen && (
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleDrawer} />
-      )}
-
       {/* Drawer */}
+      {drawerOpen && <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleDrawer} />}
       <Animated.View style={[styles.drawer, { left: drawerAnim }]}>
         <TouchableOpacity onPress={toggleDrawer} style={styles.closeButton}>
           <Ionicons name="close" size={30} color="#333" />
@@ -178,37 +196,56 @@ const ExplorePage = () => {
           keyExtractor={(item) => item}
           contentContainerStyle={{ paddingTop: 60 }}
         />
-<View style={styles.accountSection}>
-  <TouchableOpacity
-    onPress={() => {
-      toggleDrawer();
-      navigation.navigate("MyReservationsScreen");
-    }}
-    style={{ marginBottom: 20, alignItems: "center" }}
-  >
-    <Ionicons name="calendar-outline" size={36} color="#333" />
-    <Text style={{ fontSize: 16, marginTop: 5 }}>Rezervările mele</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    onPress={() => {
-      toggleDrawer();
-      navigation.navigate("AccountDetailsScreen");
-    }}
-    style={{ alignItems: "center" }}
-  >
-    <Ionicons name="person-circle-outline" size={40} color="#333" />
-    <Text style={{ fontSize: 16, marginTop: 5 }}>Detalii cont</Text>
-  </TouchableOpacity>
-</View>
-
+        <View style={styles.accountSection}>
+          <TouchableOpacity onPress={() => { toggleDrawer(); navigation.navigate("MyReservationsScreen"); }} style={{ marginBottom: 20, alignItems: "center" }}>
+            <Ionicons name="calendar-outline" size={36} color="#333" />
+            <Text style={{ fontSize: 16, marginTop: 5 }}>Rezervările mele</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { toggleDrawer(); navigation.navigate("AccountDetailsScreen"); }} style={{ alignItems: "center" }}>
+            <Ionicons name="person-circle-outline" size={40} color="#333" />
+            <Text style={{ fontSize: 16, marginTop: 5 }}>Detalii cont</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
-      {/* Sugestii – doar dacă NU avem tip selectat */}
-      {!selectedType && suggestedNow.length > 0 && (
-        <View style={{ marginBottom: 20 }}>
+      {/* Căutare */}
+      <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#aaa" style={{ marginLeft: 10 }} />
+          <TextInput
+            placeholder="Caută un local..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+        </View>
+      </View>
+
+      {/* Rezultate căutare */}
+      {searchQuery.length > 0 && (
+        <View style={{ flex: 1, paddingHorizontal: 20 }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
+            Rezultate pentru: "{searchQuery}"
+          </Text>
+          <FlatList
+            data={locations.filter(loc =>
+              (!selectedType || loc.type === selectedType) &&
+              typeof loc.name === "string" &&
+              loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )}
+            keyExtractor={(item) => item.id}
+            renderItem={renderFilteredCard}
+            ListEmptyComponent={<Text style={{ marginTop: 10, fontStyle: "italic", color: "#666" }}>Nu am găsit niciun rezultat.</Text>}
+          />
+        </View>
+      )}
+
+      {/* Sugestii */}
+      {!selectedType && !searchQuery && suggestedNow.length > 0 && (
+        <View style={{ marginBottom: 20, marginTop: 20 }}>
           <Text style={styles.sectionTitle}>🔥 Sugestii pentru tine</Text>
-          <View style={{ height: 20}} />
+          <View style={{ height: 8}} />
           <FlatList
             data={suggestedNow}
             renderItem={renderSuggestedCard}
@@ -219,69 +256,77 @@ const ExplorePage = () => {
           />
         </View>
       )}
-
-      {/* Locații filtrate */}
-      {selectedType && (
+{selectedType && !searchQuery && (
   <View style={{ flex: 1, paddingHorizontal: 20 }}>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-        {translateTypeToName(selectedType)}
-      </Text>
-      <TouchableOpacity onPress={() => setSelectedType(null)}>
-        <Text style={{ fontSize: 14, color: "#007bff" }}>🔙 Înapoi</Text>
-      </TouchableOpacity>
-    </View>
-
+    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 , marginTop: 7}}>
+      
+  <TouchableOpacity onPress={() => setSelectedType(null)} style={{ marginRight: 10 }}>
+    <Text style={{ fontSize: 20 }}>🔙</Text>
+  </TouchableOpacity>
+  <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+    {translateTypeToName(selectedType)}
+  </Text>
+</View>
+<View style={{ height: 6}} />
     <FlatList
       data={filteredLocations}
       keyExtractor={(item) => item.id}
       renderItem={renderFilteredCard}
-      ListEmptyComponent={<Text>Nu există locații disponibile.</Text>}
+      ListEmptyComponent={
+        <Text style={{ marginTop: 10, color: "#888" }}>
+          Nu există locații pentru această categorie.
+        </Text>
+      }
     />
-    
   </View>
 )}
-<View style={{ height: 20 }} />
 
-{/* Harta – se afișează doar dacă nu e selectat un tip */} 
-{!selectedType && (
-  <View style={{ height: 300, marginBottom: 20, marginHorizontal: 20, borderRadius: 10, overflow: "hidden" }}>
-    <MapView
-      style={{ flex: 1 }}
-      initialRegion={{
-        latitude: 44.4268,
-        longitude: 26.1025,
-        latitudeDelta: 0.08,
-        longitudeDelta: 0.08,
-      }}
-    >
-      {locations.map((loc) =>
-        loc.latitude && loc.longitude && (
-          <Marker
-            key={loc.id}
-            coordinate={{
-              latitude: loc.latitude,
-              longitude: loc.longitude,
+      {/* Harta */}
+      {!selectedType && !searchQuery && (
+        <View style={{ height: 300, marginBottom: 20, marginHorizontal: 20, borderRadius: 10, overflow: "hidden" }}>
+          <MapView
+            style={{ flex: 1 }}
+            initialRegion={{
+              latitude: 44.4268,
+              longitude: 26.1025,
+              latitudeDelta: 0.08,
+              longitudeDelta: 0.08,
             }}
-            title={loc.name}
-            description={`⭐ ${loc.rating || "Fără rating momentan"}`}
-            onPress={() => navigation.navigate("LocationDetails", { location: loc })}
-          />
-        )
+          >
+            {locations
+              .filter(loc => loc.latitude && loc.longitude)
+              .map(loc => (
+                <Marker
+                  key={loc.id}
+                  coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
+                  onPress={() => navigation.navigate("LocationDetails", { location: loc })}
+                >
+                  <Callout tooltip>
+                    <View style={{ backgroundColor: "white", padding: 8, borderRadius: 8, maxWidth: 200 }}>
+                      {typeof loc.name === "string" && (
+                        <Text style={{ fontWeight: "bold", fontSize: 14, marginBottom: 4 }}>{loc.name}</Text>
+                      )}
+                      <Text style={{ fontSize: 13 }}>
+                        ⭐ {typeof loc.rating === "number" ? loc.rating : "Fără rating"}
+                      </Text>
+                    </View>
+                  </Callout>
+                </Marker>
+              ))}
+          </MapView>
+        </View>
       )}
-    </MapView>
-  </View>
-)}
-
     </View>
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginLeft: 20,
+    marginBottom: 10,
   },
   card: {
     width: width * 0.7,
@@ -294,8 +339,6 @@ const styles = StyleSheet.create({
   cardImage: {
     width: "100%",
     height: 130,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
   },
   cardContent: {
     padding: 10,
@@ -358,6 +401,25 @@ const styles = StyleSheet.create({
     bottom: 30,
     left: 20,
     alignItems: "center",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
   },
 });
 

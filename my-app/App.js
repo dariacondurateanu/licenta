@@ -15,6 +15,7 @@ import AccountDetailsScreen from "./AccountDetailsScreen";
 import EmailVerificationScreen from "./EmailVerificationScreen";
 import BookingScreen from "./BookingScreen";
 import MyReservationsScreen from "./MyReservationsScreen";
+
 const Stack = createStackNavigator();
 
 export default function App() {

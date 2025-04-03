@@ -449,7 +449,8 @@ await recalculateRating(location.id, updatedReviews);
 </View>
 
     </ScrollView>
-    <Modal visible={reviewsModalVisible} animationType="slide" transparent={false}>
+    {locationData && (
+  <Modal visible={reviewsModalVisible} animationType="slide" transparent={false}>
   <SafeAreaView style={{ flex: 1 }}>
     <ScrollView style={{ padding: 20 }}>
       <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20 }}>
@@ -518,7 +519,7 @@ await recalculateRating(location.id, updatedReviews);
     </ScrollView>
   </SafeAreaView>
 </Modal>
-
+    )}
   </SafeAreaView>
   );
 };
