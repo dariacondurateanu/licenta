@@ -114,6 +114,31 @@ const MyReservationsScreen = () => {
     }
   };
 
+  const handleDeletePastReservation = async (id, locationId) => {
+    try {
+      const confirm = await new Promise((resolve) => {
+        Alert.alert(
+          "Confirmare ștergere",
+          "Sigur dorești să ștergi această rezervare trecută din listă?",
+          [
+            { text: "Anulează", style: "cancel", onPress: () => resolve(false) },
+            { text: "Șterge", style: "destructive", onPress: () => resolve(true) },
+          ]
+        );
+      });
+  
+      if (!confirm) return;
+  
+      await deleteDoc(doc(db, `locations/${locationId}/rezervari`, id));
+  
+      setReservations((prev) => prev.filter((rez) => rez.id !== id));
+    } catch (error) {
+      console.error("Eroare la ștergere rezervare trecută:", error);
+      Alert.alert("Eroare", "Nu s-a putut șterge rezervarea.");
+    }
+  };
+  
+
   useEffect(() => {
     fetchReservations();
   }, []);
@@ -171,23 +196,36 @@ const MyReservationsScreen = () => {
             )}
 
             {isRezPast && (
+            <>
+            {/* Recenzie buton (jos dreapta) */}
               <View style={styles.cancelWrapper}>
                 <TouchableOpacity
                   style={[styles.cancelCircle, { backgroundColor: "#007bff" }]}
                   onPress={() =>
-                    navigation.navigate("ReviewScreen", {
-                      locationId: item.locationId,
-                    })
+                  navigation.navigate("ReviewScreen", {
+                  locationId: item.locationId,
+                })
                   }
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.cancelIcon}>✍️</Text>
-                </TouchableOpacity>
-                <Text style={[styles.cancelLabel, { color: "#007bff" }]}>
-                  Recenzie
-                </Text>
-              </View>
-            )}
+                <Text style={styles.cancelIcon}>✍️</Text>
+              </TouchableOpacity>
+              <Text style={[styles.cancelLabel, { color: "#007bff" }]}>Recenzie</Text>
+            </View>
+
+    {/* X în dreapta-sus */}
+    <TouchableOpacity
+      style={styles.deleteX}
+      onPress={() =>
+        handleDeletePastReservation(item.id, item.locationId)
+      }
+    >
+      <Text style={{ fontSize: 20, color: "#e63946", fontWeight: "bold" }}>x</Text>
+    </TouchableOpacity>
+  </>
+)}
+
+
           </View>
         </View>
       </TouchableOpacity>
@@ -272,6 +310,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
+  deleteX: {
+    position: "absolute",
+    top: 10,
+    right: 22,
+    zIndex: 1,
+  },
+  
   card: {
     backgroundColor: "white",
     borderRadius: 10,

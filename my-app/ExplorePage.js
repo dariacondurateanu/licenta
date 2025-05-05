@@ -11,6 +11,7 @@ import {
   Image,
   TextInput,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient"
 import { Ionicons } from "@expo/vector-icons";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig";
@@ -21,7 +22,7 @@ const { width } = Dimensions.get("window");
 
 const ExplorePage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerAnim] = useState(new Animated.Value(-width * 0.5));
+  const [drawerAnim] = useState(new Animated.Value(-width * 0.6));
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [suggestedNow, setSuggestedNow] = useState([]);
@@ -32,7 +33,7 @@ const ExplorePage = () => {
 
   // Toggle drawer
   const toggleDrawer = () => {
-    const toValue = drawerOpen ? -width * 0.5 : 0;
+    const toValue = drawerOpen ? -width * 0.6 : 0;
     Animated.timing(drawerAnim, {
       toValue,
       duration: 300,
@@ -101,7 +102,16 @@ const ExplorePage = () => {
       default: return "Diverse";
     }
   };
-
+  const getIconForType = (type) => {
+    switch (type) {
+      case "club": return "musical-notes-outline";
+      case "coffee shop": return "cafe-outline";
+      case "cocktail bar": return "wine-outline";
+      case "restaurant": return "restaurant-outline";
+      default: return "apps-outline";
+    }
+  };
+  
   const handleCategoryPress = (type) => {
     setSelectedType(type);
     toggleDrawer();
@@ -116,14 +126,33 @@ const ExplorePage = () => {
     )
   : [];
 
-  const renderCategory = ({ item }) => (
-    <TouchableOpacity
-      style={styles.categoryButton}
-      onPress={() => handleCategoryPress(item)}
-    >
-      <Text style={styles.categoryText}>{translateTypeToName(item)}</Text>
-    </TouchableOpacity>
-  );
+  const renderCategory = ({ item }) => {
+    const iconName = getIconForType(item);
+    const isSelected = selectedType === item; // verifică dacă e categoria selectată
+  
+    return (
+      <TouchableOpacity
+        style={styles.categoryButton}
+        onPress={() => handleCategoryPress(item)}
+        activeOpacity={0.7}
+      >
+        {/* 🔹 Linia mov laterală */}
+        <View style={{
+          height: "100%",
+          width: 5,
+          backgroundColor: isSelected ? "#2e2e60" : "transparent",
+          borderTopRightRadius: 4,
+          borderBottomRightRadius: 4,
+          marginRight: 10
+        }} />
+  
+        {/* 🔹 Icon + Text */}
+        <Ionicons name={iconName} size={20} color="#2e2e60" style={{ marginRight: 12 }} />
+        <Text style={styles.categoryText}>{translateTypeToName(item)}</Text>
+      </TouchableOpacity>
+    );
+  };
+  
 
   const renderSuggestedCard = ({ item }) => (
     <TouchableOpacity
@@ -142,7 +171,7 @@ const ExplorePage = () => {
     if (!item || !item.name) return null;
     return (
       <TouchableOpacity
-        style={styles.filteredCard}
+        style={[styles.filteredCard, { marginBottom: 20 }]}
         onPress={() => navigation.navigate("LocationDetails", { location: item })}
       >
         {item.imageUrl ? (
@@ -156,16 +185,28 @@ const ExplorePage = () => {
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.name}</Text>
           <Text>⭐ {item.rating || "Fără rating momentan"}</Text>
         </View>
+        <View style={styles.cardBottomBar} />
       </TouchableOpacity>
     );
   };
+  
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
+<LinearGradient
+  colors={["#d9dbf8", "#f3f4fd", "#ffffff"]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
+    <View style={{ flex: 1, paddingBottom: 20 }}>
       {/* Bara sus */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", margin: 20 }}>
+      <LinearGradient
+  colors={["#1a1a2e", "#2e2e60"]}
+  style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 15, borderRadius: 10, margin: 20 }}
+>
+
         <TouchableOpacity onPress={toggleDrawer}>
-          <Ionicons name="menu" size={30} color="black" />
+          <Ionicons name="menu" size={30} color="white" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -180,9 +221,9 @@ const ExplorePage = () => {
           style={{ alignItems: "center", marginRight: 10 }}
         >
           <Text style={{ fontSize: 24 }}>🎲</Text>
-          <Text style={{ fontSize: 12 }}>Alege local</Text>
+          <Text style={{ fontSize: 12, color: "#fff" }}>Alege local</Text>
         </TouchableOpacity>
-      </View>
+    </LinearGradient>
 
       {/* Drawer */}
       {drawerOpen && <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleDrawer} />}
@@ -198,29 +239,30 @@ const ExplorePage = () => {
         />
         <View style={styles.accountSection}>
           <TouchableOpacity onPress={() => { toggleDrawer(); navigation.navigate("MyReservationsScreen"); }} style={{ marginBottom: 20, alignItems: "center" }}>
-            <Ionicons name="calendar-outline" size={36} color="#333" />
-            <Text style={{ fontSize: 16, marginTop: 5 }}>Rezervările mele</Text>
+            <Ionicons name="calendar-outline" size={36} color="#2e2e60" />
+            <Text style={{ fontSize: 16, fontWeight: "500", color: "#2e2e60", marginTop: 5 }}>Rezervările mele</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { toggleDrawer(); navigation.navigate("AccountDetailsScreen"); }} style={{ alignItems: "center" }}>
-            <Ionicons name="person-circle-outline" size={40} color="#333" />
-            <Text style={{ fontSize: 16, marginTop: 5 }}>Detalii cont</Text>
+            <Ionicons name="person-circle-outline" size={40} color="#2e2e60" />
+            <Text style={{ fontSize: 16,fontWeight: "500", color: "#2e2e60", marginTop: 5 }}>Detalii cont</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
 
       {/* Căutare */}
-      <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#aaa" style={{ marginLeft: 10 }} />
-          <TextInput
-            placeholder="Caută un local..."
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
-          />
-        </View>
-      </View>
+      <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
+  <View style={styles.searchBar}>
+    <Ionicons name="search" size={20} color="#fff" style={{ marginLeft: 10 }} />
+    <TextInput
+      placeholder="Caută un local..."
+      placeholderTextColor="#ccc"
+      value={searchQuery}
+      onChangeText={setSearchQuery}
+      style={styles.searchInputColored}
+    />
+  </View>
+</View>
+
 
       {/* Rezultate căutare */}
       {searchQuery.length > 0 && (
@@ -316,12 +358,33 @@ const ExplorePage = () => {
           </MapView>
         </View>
       )}
-    </View>
+      </View>
+ </LinearGradient>
   );
 };
 
 // Styles
 const styles = StyleSheet.create({
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2e2e60",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  searchInputColored: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#fff",
+  },
+  
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -335,6 +398,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     elevation: 3,
+    borderBottomWidth: 4,
+    borderBottomColor: "#2e2e60",
+
   },
   cardImage: {
     width: "100%",
@@ -363,7 +429,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     bottom: 0,
-    width: width * 0.5,
+    width: width * 0.6,
     backgroundColor: "#fff",
     zIndex: 10,
     shadowColor: "#000",
@@ -373,14 +439,21 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   categoryButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 18, // era 14
+    paddingHorizontal: 24, // puțin mai lat și pe lateral
+    borderBottomWidth: 0.5,
+    borderColor: "#eee",
   },
+  
   categoryText: {
-    fontSize: 18,
+    fontSize: 18, // era 17
+    fontWeight: "500",
+    color: "#2e2e60",
   },
+  
+  
   overlay: {
     position: "absolute",
     top: 0,
@@ -398,9 +471,10 @@ const styles = StyleSheet.create({
   },
   accountSection: {
     position: "absolute",
-    bottom: 30,
-    left: 20,
-    alignItems: "center",
+    bottom: 60, // mai sus decât era
+    left: 0,
+    right: 0,
+    alignItems: "center", // centrăm perfect pe orizontală
   },
   searchContainer: {
     flexDirection: "row",
@@ -420,6 +494,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: "#333",
+  },
+  cardBottomBar: {
+    height: 6,
+    backgroundColor: "#2e2e60",
+    marginTop: 10,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
   },
 });
 

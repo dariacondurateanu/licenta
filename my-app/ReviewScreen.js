@@ -6,9 +6,11 @@ import {
   Alert,
   TouchableOpacity,
   Animated,
+  ScrollView,
 } from "react-native";
 import { addReview } from "./reviewService";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const ReviewScreen = ({ route, navigation }) => {
   const { locationId } = route.params;
@@ -72,83 +74,118 @@ const ReviewScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f0f2f5", padding: 20 }}>
-      <Text style={{ fontSize: 28, fontWeight: "bold", color: "#333", marginBottom: 20, alignSelf: "center" }}>
-        Lasă o recenzie
-      </Text>
+<LinearGradient
+  colors={["#f7f2ff", "#fefcff", "#ffffff"]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
+  <ScrollView
+    contentContainerStyle={{
+      padding: 20,
+      paddingBottom: 50, // să evităm coliziunea cu bara de jos
+      flexGrow: 1,       // 🔥 face gradientul să acopere tot ecranul
+      justifyContent: "center", // centrează conținutul când e puțin
+    }}
+  >
+    <Text
+      style={{
+        fontSize: 26,
+        fontWeight: "bold",
+        color: "#2e2e60",
+        marginBottom: 30,
+        alignSelf: "center",
+      }}
+    >
+      Lasă o recenzie
+    </Text>
 
-      {/* Nume utilizator */}
-      <View style={{
+    {/* Nume utilizator */}
+    <View
+      style={{
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 15
-      }}>
-        <Icon name="person" size={22} color="#888" style={{ marginRight: 10 }} />
-        <TextInput
-          placeholder="Numele tău"
-          value={userName}
-          onChangeText={setUserName}
-          style={{ flex: 1, fontSize: 16 }}
-        />
-      </View>
-
-      {/* Rating */}
-      <Text style={{ fontSize: 16, color: "#555", marginBottom: 8 }}>Rating:</Text>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          paddingVertical: 15,
-          marginBottom: 25,
-          //backgroundColor: "#fff",
-          borderRadius: 16,
-          shadowColor: "#000",
-          shadowOpacity: 0.05,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 2,
-        }}
-      >
-        {renderStars()}
-      </View>
-
-      {/* Comentariu */}
-      <View style={{
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 20
-      }}>
-        <TextInput
-          placeholder="Scrie o recenzie"
-          value={comment}
-          onChangeText={setComment}
-          multiline
-          numberOfLines={4}
-          style={{ minHeight: 100, textAlignVertical: "top", fontSize: 16 }}
-        />
-      </View>
-
-      {/* Buton */}
-      <TouchableOpacity
-        onPress={handleSubmitReview}
-        style={{
-          backgroundColor: "#4a90e2",
-          paddingVertical: 15,
-          borderRadius: 12,
-          alignItems: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.2,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 3,
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>Trimite Recenzie</Text>
-      </TouchableOpacity>
+        backgroundColor: "#ffffff",
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 25,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
+    >
+      <Icon name="person" size={22} color="#888" style={{ marginRight: 10 }} />
+      <TextInput
+        placeholder="Numele tău"
+        value={userName}
+        onChangeText={setUserName}
+        style={{ flex: 1, fontSize: 16, color: "#333" }}
+        placeholderTextColor="#aaa"
+      />
     </View>
+
+    {/* Rating */}
+    <Text style={{ fontSize: 16, color: "#2e2e60", marginBottom: 10, fontWeight: "bold" }}>
+      Rating:
+    </Text>
+    <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 30 }}>
+      {renderStars()}
+    </View>
+
+    {/* Comentariu */}
+    <View
+      style={{
+        backgroundColor: "#ffffff",
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 30,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
+    >
+      <TextInput
+        placeholder="Scrie o recenzie"
+        value={comment}
+        onChangeText={setComment}
+        multiline
+        numberOfLines={5}
+        style={{
+          minHeight: 120,
+          textAlignVertical: "top",
+          fontSize: 16,
+          color: "#333",
+        }}
+        placeholderTextColor="#aaa"
+      />
+    </View>
+
+    {/* Buton */}
+    <TouchableOpacity
+      onPress={handleSubmitReview}
+      style={{
+        backgroundColor: "#d8c8f7",
+        paddingVertical: 16,
+        borderRadius: 14,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
+      }}
+    >
+      <Text style={{ color: "#2e2e60", fontSize: 18, fontWeight: "bold" }}>
+        ✍️ Trimite Recenzie
+      </Text>
+    </TouchableOpacity>
+  </ScrollView>
+</LinearGradient>
+
+
   );
 };
 

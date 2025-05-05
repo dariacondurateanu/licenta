@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-// Stele decorative
 const stars = [
   { top: 60, left: 40 },
   { top: 100, left: 200 },

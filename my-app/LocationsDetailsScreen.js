@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView, Button, ActivityIndicator, TouchableOpacity, Alert, Modal, TextInput } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'react-native';
+import { LinearGradient } from "expo-linear-gradient";
 
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
@@ -22,6 +25,8 @@ const LocationsDetailsScreen = ({ route }) => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [showReviews, setShowReviews] = useState(false);
   const [reviewsModalVisible, setReviewsModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+
 
   const pulseHeart = () => {
     Animated.sequence([
@@ -267,6 +272,12 @@ await recalculateRating(location.id, updatedReviews);
   }
 
   return (
+    <LinearGradient
+    colors={["#d9dbf8", "#f3f4fd", "#ffffff"]}
+    start={{ x: 0.5, y: 0 }}
+    end={{ x: 0.5, y: 1 }}
+    style={{ flex: 1 }}
+  >
     <SafeAreaView style={{ flex: 1 }}>
   <ScrollView style={{ padding: 20 }} contentContainerStyle={{ paddingBottom: 40 }}>
       {/* 🔹 Butonul de Favorite - Poziționat în dreapta sus */}
@@ -391,7 +402,7 @@ await recalculateRating(location.id, updatedReviews);
         style={{ borderWidth: 1, borderRadius: 5, padding: 10, marginBottom: 15, fontSize: 16 }}
       />
       
-      {/* Câmp Comentariu */}
+
       <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 5 }}>Comentariu text:</Text>
       <TextInput 
         placeholder="Modifică recenzia..."
@@ -402,7 +413,7 @@ await recalculateRating(location.id, updatedReviews);
         style={{ borderWidth: 1, borderRadius: 5, padding: 10, fontSize: 16, textAlignVertical: "top", minHeight: 80 }}
       />
 
-      {/* Butoane */}
+   
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
         <Button title="Anulează" onPress={() => setModalVisible(false)} />
         <Button title="Salvează" onPress={saveEditedReview} />
@@ -411,117 +422,140 @@ await recalculateRating(location.id, updatedReviews);
   </View>
 </Modal>
 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
-  {/* Buton Adaugă Recenzie */}
-  <TouchableOpacity
-    style={{
-      backgroundColor: "#007bff",
-      padding: 12,
-      borderRadius: 8,
-      flex: 1,
-      marginRight: 5,
-    }}
+
+<TouchableOpacity
+  style={{
+    backgroundColor: "#2e2e60",
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    marginRight: 5,
+    elevation: 3,
+  }}
     onPress={() => navigation.navigate("ReviewScreen", { locationId: location.id })}
   >
     <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
-      ✍️ Adauga Recenzie
-    </Text>
-  </TouchableOpacity>
+    ✍️ Adaugă Recenzie
+  </Text>
+</TouchableOpacity>
 
-  {/* Buton Rezervă */}
-  <TouchableOpacity
-    disabled={!locationData?.permiteRezervare}
-    style={{
-      backgroundColor: locationData?.permiteRezervare ? "#28a745" : "#ccc",
-      padding: 12,
-      borderRadius: 8,
-      flex: 1,
-    }}
-    onPress={() => {
-      if (locationData?.permiteRezervare) {
-        navigation.navigate("BookingScreen", { locationId: location.id });
-      }
-    }}
-  >
-    <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
-      📅 Rezervă
-    </Text>
-  </TouchableOpacity>
+
+
+<TouchableOpacity
+  disabled={!locationData?.permiteRezervare}
+  style={{
+    backgroundColor: locationData?.permiteRezervare ? "#b497f0" : "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    elevation: 3,
+  }}
+  onPress={() => {
+    if (locationData?.permiteRezervare) {
+      navigation.navigate("BookingScreen", { locationId: location.id });
+    }
+  }}
+>
+  <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
+    📅 Rezervă
+  </Text>
+</TouchableOpacity>
+
+
 </View>
 
-    </ScrollView>
-    {locationData && (
-  <Modal visible={reviewsModalVisible} animationType="slide" transparent={false}>
-  <SafeAreaView style={{ flex: 1 }}>
-    <ScrollView style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20 }}>
-        📢 Recenzii pentru {locationData.name}
-      </Text>
+    </ScrollView> 
+     {locationData && (
+ <Modal visible={reviewsModalVisible} animationType="slide" transparent={false}>
+ <LinearGradient
+   colors={["#f3e8ff", "#ffffff"]}
+   start={{ x: 0.5, y: 0 }}
+   end={{ x: 0.5, y: 1 }}
+   style={{ flex: 1 }}
+ >
+   <SafeAreaView style={{ flex: 1 }}>
+     <StatusBar barStyle="dark-content" backgroundColor="#f3e8ff" />
+     <ScrollView contentContainerStyle={{ padding: 20, paddingTop: insets.top + 10 }}>
+       {/* 👇 adăugat paddingTop extra */}
+       <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#black" }}>
+         📢 Recenzii pentru {locationData.name}
+       </Text>
 
-      {locationData.reviews?.length > 0 ? (
-        locationData.reviews.map((review, index) => (
+          {locationData.reviews?.length > 0 ? (
+            locationData.reviews.map((review, index) => (
+              <TouchableOpacity
+                key={index}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 12,
+                  padding: 15,
+                  marginBottom: 15,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onLongPress={() => {
+                  if (review.userId === auth.currentUser?.uid) {
+                    Alert.alert("Opțiuni recenzie", "Ce vrei să faci?", [
+                      { text: "Anulează", style: "cancel" },
+                      { text: "Editează", onPress: () => handleEditReview(review) },
+                      {
+                        text: "Șterge",
+                        onPress: () => handleDeleteReview(review),
+                        style: "destructive",
+                      },
+                    ]);
+                  } else {
+                    Alert.alert(
+                      "⛔ Nu poți modifica această recenzie",
+                      "Doar autorul recenziei o poate edita sau șterge."
+                    );
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "bold", fontSize: 16, color: "#2e2e60" }}>
+                    👤 {review.user}
+                  </Text>
+                  <Text style={{ fontSize: 15, color: "#f5c518" }}>{review.rating} ⭐</Text>
+                </View>
+                <Text style={{ fontSize: 15, marginBottom: 6, color: "#333" }}>{review.comment}</Text>
+                {review.timestamp && (
+                  <Text style={{ fontSize: 12, color: "#888", textAlign: "right" }}>
+                    ⏳ {timeAgo(review.timestamp.seconds)}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ fontStyle: "italic", color: "#666" }}>Fără recenzii momentan.</Text>
+          )}
+
           <TouchableOpacity
-            key={index}
+            onPress={() => setReviewsModalVisible(false)}
             style={{
-              backgroundColor: "#ffffff",
-              borderRadius: 12,
-              padding: 15,
-              marginBottom: 12,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onLongPress={() => {
-              if (review.userId === auth.currentUser?.uid) {
-                Alert.alert(
-                  "Opțiuni recenzie",
-                  "Ce vrei să faci?",
-                  [
-                    { text: "Anulează", style: "cancel" },
-                    { text: "Editează", onPress: () => handleEditReview(review) },
-                    { text: "Șterge", onPress: () => handleDeleteReview(review), style: "destructive" },
-                  ]
-                );
-              } else {
-                Alert.alert("⛔ Nu poți modifica această recenzie", "Doar autorul recenziei o poate edita sau șterge.");
-              }
+              marginTop: 30,
+              backgroundColor: "#d8c8f7",
+              padding: 12,
+              borderRadius: 10,
+              alignItems: "center",
+              elevation: 2,
             }}
           >
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-              <Text style={{ fontWeight: "bold", fontSize: 16 }}>👤 {review.user}</Text>
-              <Text style={{ fontSize: 15, color: "#f5c518" }}>{review.rating} ⭐</Text>
-            </View>
-            <Text style={{ fontSize: 15, marginBottom: 6 }}>{review.comment}</Text>
-            {review.timestamp && (
-              <Text style={{ fontSize: 12, color: "gray", textAlign: "right" }}>
-                ⏳ {timeAgo(review.timestamp.seconds)}
-              </Text>
-            )}
+            <Text style={{ color: "#2e2e60", fontSize: 16, fontWeight: "bold" }}>✖ Închide</Text>
           </TouchableOpacity>
-        ))
-      ) : (
-        <Text>Fără recenzii momentan.</Text>
-      )}
-
-      <TouchableOpacity
-        onPress={() => setReviewsModalVisible(false)}
-        style={{
-          marginTop: 30,
-          backgroundColor: "#dc3545",
-          padding: 12,
-          borderRadius: 8,
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>✖ Închide</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  </SafeAreaView>
-</Modal>
-    )}
-  </SafeAreaView>
-  );
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  </Modal>
+)}
+</SafeAreaView>
+</LinearGradient> 
+);
 };
+      
+      export default LocationsDetailsScreen;
+      
 
-export default LocationsDetailsScreen;

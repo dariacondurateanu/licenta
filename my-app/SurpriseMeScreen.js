@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   Animated,
+  Platform,
 } from "react-native";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig";
@@ -14,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Svg, { G, Path } from "react-native-svg";
 import { ScrollView } from "react-native-gesture-handler";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const MiniWheel = () => {
   const spinAnim = useRef(new Animated.Value(0)).current;
@@ -191,90 +193,164 @@ if (selectedRating) {
       <Text style={styles.rating}>
         {item.rating ? `⭐ ${item.rating}` : "⭐ Fără rating momentan"}
       </Text>
+      <View style={styles.resultCardBar} />
     </TouchableOpacity>
   );
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <ScrollView
         style={{ padding: 15 }}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 10 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <Text style={styles.heading}>🎯 Alege preferințele tale</Text>
 
-        <Text style={styles.label}>Categorie:</Text>
-        {["restaurant", "club", "coffee shop", "cocktail bar"].map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={styles.checkboxContainer}
-            onPress={() => setSelectedCategory(toggleSelect(selectedCategory, cat))}
-          >
-            <Text style={styles.checkboxText}>
-              {selectedCategory === cat ? "✅" : "⬜️"} {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.label}>
+  <Icon name="storefront-outline" size={18} color="#6A0DAD" /> Categorie:
+</Text>
 
-<Text style={styles.label}>Rating minim:</Text>
-{["5", "4.5", "4", "3.5"].map((rate) => (
-  <TouchableOpacity
-    key={rate}
-    style={styles.checkboxContainer}
-    onPress={() => setSelectedRating(toggleSelect(selectedRating, rate))}
-  >
-    <Text style={styles.checkboxText}>
-      {selectedRating === rate
-        ? `✅ ${rate === "5" ? "5⭐" : `peste ${rate}⭐`}`
-        : `⬜️ ${rate === "5" ? "5⭐" : `peste ${rate}⭐`}`}
-    </Text>
-  </TouchableOpacity>
-))}
+{[
+  { key: "restaurant", icon: "silverware-fork-knife" },
+  { key: "club", icon: "music" },
+  { key: "coffee shop", icon: "coffee" },
+  { key: "cocktail bar", icon: "glass-cocktail" },
+].map(({ key, icon }) => {
+  const selected = selectedCategory === key;
+  return (
+    <TouchableOpacity
+      key={key}
+      style={[styles.optionCard, selected && styles.optionCardSelected]}
+      onPress={() => setSelectedCategory(toggleSelect(selectedCategory, key))}
+    >
+      <View style={[styles.iconWrapper, selected && styles.iconWrapperSelected]}>
+        <Icon name={icon} size={20} color={selected ? "#4a148c" : "white"} />
+      </View>
+      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+        {key.charAt(0).toUpperCase() + key.slice(1)}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
 
 
-        <Text style={styles.label}>Preț mediu:</Text>
-        {["$", "$$", "$$$"].map((val) => (
-          <TouchableOpacity
-            key={val}
-            style={styles.checkboxContainer}
-            onPress={() => setSelectedPrice(toggleSelect(selectedPrice, val))}
-          >
-            <Text style={styles.checkboxText}>
-              {selectedPrice === val ? "✅" : "⬜️"} {val}
-            </Text>
-          </TouchableOpacity>
-        ))}
 
-        <Text style={styles.label}>Activități speciale:</Text>
-        {["terasa", "karaoke", "board games", "laptop friendly","pet friendly"].map((act) => (
-          <TouchableOpacity
-            key={act}
-            style={styles.checkboxContainer}
-            onPress={() => toggleActivity(act)}
-          >
-            <Text style={styles.checkboxText}>
-              {selectedActivities.includes(act) ? "✅" : "⬜️"} {act}
-            </Text>
-          </TouchableOpacity>
-        ))}
+<Text style={styles.label}>
+  <Icon name="star-outline" size={18} color="#6A0DAD" /> Rating minim:
+</Text>
 
-        <View style={{ borderTopWidth: 1, borderColor: "#ddd", marginVertical: 10 }} />
-        <Text style={styles.label}>Disponibilitate:</Text>
-        <TouchableOpacity
-          style={styles.checkboxContainer}
-          onPress={() => setOpenNow((prev) => !prev)}
-        >
-          <Text style={styles.checkboxText}>
-            {openNow ? "✅" : "⬜️"} Doar locații deschise acum
-          </Text>
-        </TouchableOpacity>
+{["5", "4.5", "4", "3.5"].map((rate) => {
+  const selected = selectedRating === rate;
+  return (
+    <TouchableOpacity
+      key={rate}
+      style={[
+        styles.optionCard,
+        selected && styles.optionCardSelected,
+      ]}
+      onPress={() => setSelectedRating(toggleSelect(selectedRating, rate))}
+    >
+      <View style={[
+        styles.iconWrapper,
+        selected && styles.iconWrapperSelected
+      ]}>
+        <Icon
+          name="star"
+          size={18}
+          color={selected ? "#4a148c" : "white"}
+        />
+      </View>
+      <Text style={[
+        styles.optionText,
+        selected && styles.optionTextSelected
+      ]}>
+        {rate === "5" ? "5⭐" : `Peste ${rate}⭐`}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
 
-        <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-          <Text style={{ color: "white", fontWeight: "bold" }}>
-            🔍 Găsește locații
-          </Text>
-        </TouchableOpacity>
+
+
+
+<Text style={styles.label}>
+  <Icon name="cash-multiple" size={18} color="#6A0DAD" /> Preț mediu:
+</Text>
+
+{["$", "$$", "$$$"].map((val) => {
+  const selected = selectedPrice === val;
+  return (
+    <TouchableOpacity
+      key={val}
+      style={[styles.optionCard, selected && styles.optionCardSelected]}
+      onPress={() => setSelectedPrice(toggleSelect(selectedPrice, val))}
+    >
+      <View style={[styles.iconWrapper, selected && styles.iconWrapperSelected]}>
+        <Icon name="currency-usd" size={18} color={selected ? "#4a148c" : "white"} />
+      </View>
+      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+        {val}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
+
+
+
+<Text style={styles.label}>
+  <Icon name="party-popper" size={18} color="#6A0DAD" /> Activități speciale:
+</Text>
+
+{[
+  { key: "terasa", icon: "weather-sunny" },
+  { key: "karaoke", icon: "microphone" },
+  { key: "board games", icon: "gamepad-variant" },
+  { key: "laptop friendly", icon: "laptop" },
+  { key: "pet friendly", icon: "dog" },
+].map(({ key, icon }) => {
+  const selected = selectedActivities.includes(key);
+  return (
+    <TouchableOpacity
+      key={key}
+      style={[styles.optionCard, selected && styles.optionCardSelected]}
+      onPress={() => toggleActivity(key)}
+    >
+      <View style={[styles.iconWrapper, selected && styles.iconWrapperSelected]}>
+        <Icon name={icon} size={18} color={selected ? "#4a148c" : "white"} />
+      </View>
+      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+        {key}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
+
+
+
+<View style={{ borderTopWidth: 1, borderColor: "#ddd", marginVertical: 20 }} />
+<Text style={styles.label}>
+  <Icon name="clock-time-four-outline" size={18} color="#6A0DAD" /> Disponibilitate:
+</Text>
+
+<TouchableOpacity
+  style={[styles.optionCard, openNow && styles.optionCardSelected]}
+  onPress={() => setOpenNow((prev) => !prev)}
+>
+  <View style={[styles.iconWrapper, openNow && styles.iconWrapperSelected]}>
+    <Icon name="clock-check-outline" size={18} color={openNow ? "#4a148c" : "white"} />
+  </View>
+  <Text style={[styles.optionText, openNow && styles.optionTextSelected]}>
+    Doar locații deschise acum
+  </Text>
+</TouchableOpacity>
+
+
+
+<TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+  <Text style={styles.searchBtnText}>🔍 Găsește locații</Text>
+</TouchableOpacity>
+
 
         {results.length > 0 && (
           <>
@@ -296,75 +372,199 @@ if (selectedRating) {
       </ScrollView>
 
       {showWheel && (
-        <TouchableOpacity
-          style={styles.floatingWheelPreview}
-          onPress={() => navigation.navigate("LuckyWheel")}
-        >
-          <MiniWheel />
-          <Text style={styles.wheelText}>Încă nu te-ai{"\n"}hotărât?</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+      style={styles.floatingWheelPreview}
+      onPress={() => navigation.navigate("LuckyWheel")}
+    >
+      <MiniWheel />
+      <Text style={styles.wheelText}>Încă nu știi ce vrei?</Text>
+      <Text style={styles.wheelSubtext}>Apasă roata surprizelor</Text>
+    </TouchableOpacity>
+    
       )}
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   label: {
     fontWeight: "bold",
-    fontSize: 16,
-    marginTop: 10,
+    fontSize: 18,
+    marginTop: 20,
+    marginBottom: 10,
+    color: "#4a148c", // mov închis
+    textAlign: "left",
   },
+  categoryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#4a148c",
+    marginBottom: 12,
+    backgroundColor: "white",
+    alignSelf: "flex-start",          // ✅ aliniere pe stânga și scurtare
+  },
+  categoryCardSelected: {
+    backgroundColor: "#4a148c",
+  },
+  categoryText: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#4a148c",
+    textTransform: "capitalize",
+  },
+  categoryTextSelected: {
+    color: "white",
+  },
+  
   checkboxContainer: {
-    marginVertical: 5,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#4a148c",
+    backgroundColor: "white",
+    marginVertical: 8,
+    alignItems: "flex-start",
+    alignSelf: "flex-start",           // ✅ butonul nu va mai ocupa toată lățimea
+  },
+  checkboxContainerSelected: {
+    backgroundColor: "#4a148c",
   },
   checkboxText: {
-    fontSize: 15,
+    fontSize: 16,
+    color: "#4a148c",
+    fontWeight: "bold",
+  },
+  checkboxTextSelected: {
+    color: "white",
   },
   heading: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
-    marginVertical: 10,
+    marginTop: 20,
+    marginBottom: 12,
+    color: "#4a148c",
+    textAlign: "left",
   },
   resultCard: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 15,
+    backgroundColor: "#f9f0fb", // fundal alb
+    borderRadius: 18,
+    marginBottom: 20,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 4,
   },
   image: {
-    height: 150,
+    height: 160,
     width: "100%",
-    borderRadius: 8,
   },
   name: {
     fontSize: 18,
     fontWeight: "bold",
-    marginTop: 8,
+    color: "#111",
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
   rating: {
     fontSize: 14,
-    color: "black",
+    color: "#444",
+    paddingHorizontal: 12,
+    paddingBottom: 16,
+    flexDirection: "row",
+  },
+  resultCardBar: {
+    height: 6,
+    backgroundColor: "#4a148c", // mov închis
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
   },
   searchBtn: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: "#4a148c",
+    padding: 16,
+    borderRadius: 14,
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
+  },
+  searchBtnText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
   },
   floatingWheelPreview: {
     position: "absolute",
-    right: 10,
-    top: 170,
+    top: Platform.OS === "ios" ? 10 : 80, // ⬆️ mai jos, dar tot sus
+    right: 16,
+    width: 160,
+    padding: 0,
+    borderRadius: 20,
+    backgroundColor: "f7f1fb",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 10,
     alignItems: "center",
-    zIndex: 100,
   },
+  
+  
   wheelText: {
-    fontSize: 12,
-    color: "gray",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4a148c",
     textAlign: "center",
-    marginTop: 7,
+    marginTop: 8,
   },
+  wheelSubtext: {
+    fontSize: 11,
+    color: "#777",
+    textAlign: "center",
+    marginTop: 2,
+  },
+  optionCard: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f7f1fb", // lavandă deschis
+  padding: 14,
+  marginVertical: 8,
+  borderRadius: 16,
+  shadowColor: "#000",
+  shadowOpacity: 0.05,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 3,
+  elevation: 2,
+  width: "98%",
+  alignSelf: "flex-start",
+},
+optionCardSelected: {
+  backgroundColor: "#4a148c",
+},
+iconWrapper: {
+  backgroundColor: "#d7bafc",
+  padding: 6,
+  borderRadius: 8,
+  marginRight: 12,
+},
+iconWrapperSelected: {
+  backgroundColor: "white",
+},
+optionText: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#4a148c",
+},
+optionTextSelected: {
+  color: "white",
+},
+
 });
+
+
 
 export default SurpriseMeScreen;
